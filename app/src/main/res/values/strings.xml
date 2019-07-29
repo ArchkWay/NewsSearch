@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">News</string>
+    <string name="apiKey">e3453ff418ad4d639512fdfa52134766</string>
+    <string name="the_great">the great</string>
+    <string name="story">story</string>
+    <string name="default_theme">russia</string>
+
+</resources>
