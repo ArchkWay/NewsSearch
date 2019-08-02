@@ -40,11 +40,6 @@ public class ArticleRepository {
     }
 
 
-//    private String DB_NAME = "db_article";
-//    private ArticleDataBase articleDatabase;
-//    public ArticleRepository(Context context) {
-//        articleDatabase = Room.databaseBuilder(context, ArticleDataBase.class, DB_NAME).build();
-//    }
 
   private static class InsertArticleAsyncTask extends AsyncTask<ArticleEntity, Void, Void>{
         private DaoArticle daoArticle;

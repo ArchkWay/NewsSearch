@@ -1,6 +1,5 @@
 package com.example.news.di.modules;
 
-import android.app.Application;
 import android.content.Context;
 
 
@@ -36,13 +35,13 @@ public class MvpModule {
 
     @Provides
     @Singleton
-    MainNewsContract.presenter provideMainNewsContractPresenter(Context context){
+    MainNewsContract.Presenter provideMainNewsContractPresenter(Context context){
         return new MainNewsPresenter( context);
     }
 
     @Provides
     @Singleton
-    MainNewsContract.model provideMainNewsContractModel(Context context){
+    MainNewsContract.Model provideMainNewsContractModel(Context context){
         return new MainNewsModel(context);
     }
 

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProviders;
@@ -17,7 +18,6 @@ import com.example.news.R;
 import com.example.news.apiservice.pojos.Article;
 import com.example.news.apiservice.pojos.NewsWrapper;
 import com.example.news.db.ArticleEntity;
-import com.example.news.db.ArticleRepository;
 import com.example.news.utils.ConnectivityHelper;
 
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 
-public class MainNewsVActivity extends AppCompatActivity implements MainNewsContract.view {
+public class MainNewsVActivity extends AppCompatActivity implements MainNewsContract.View {
     List <Article> newsList = new ArrayList <>();
     RecyclerView rvNews;
     EditText etTheme;
@@ -34,8 +34,9 @@ public class MainNewsVActivity extends AppCompatActivity implements MainNewsCont
     SwipeRefreshLayout srlContainer;
     ArticleEntity articleEntity;
     NoteViewModel noteViewModel;
+    boolean errorHandlerNoConnect;
     @Inject
-    MainNewsContract.presenter presenter;
+    MainNewsContract.Presenter presenter;
     String theme = "russia";
 
     @Override
@@ -44,26 +45,14 @@ public class MainNewsVActivity extends AppCompatActivity implements MainNewsCont
         setContentView(R.layout.activity_main);
         BaseApp.get(this).getInjector().inject(this);
         setViews();
-        loadNews();
+        loadNews(savedInstanceState);
         refreshListener();
-        editThemeListener();
-    }
-
-    private void getDataFromDB() {
-        noteViewModel.getAllArticles().observe(this, articles -> {
-            Article article;
-            List <Article> list = new ArrayList <>();
-            for (int i = 0; i < articles.size(); i++) {
-                article = new Article(articles.get(i).getTitle(), articles.get(i).getDescription());
-                list.add(article);
-            }
-            setRecyclerAdapter(list);
-        });
+        editThemeListener(savedInstanceState);
     }
 
 
 
-    private void editThemeListener() {
+    private void editThemeListener(Bundle savedInstance) {
         etTheme.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -78,19 +67,25 @@ public class MainNewsVActivity extends AppCompatActivity implements MainNewsCont
                 Handler handler = new Handler();
                 handler.postDelayed(() -> {
                     theme = s.toString();
-                    if(!theme.equals("")) {
-                        loadNews();//loading news after two seconds after input theme
+                    if (!theme.equals("")) {
+                        loadNews(savedInstance);//loading news after two seconds after input theme
                     }
                 }, 2000);
             }
         });
     }
 
-    private void loadNews() {
+    private void loadNews(Bundle savedInstance) {
         if (ConnectivityHelper.isConnectedToNetwork(this)) {
             presenter.attachView(this, getResources().getString(R.string.apiKey), theme); //if connection has interrupted - loading from DB
         } else {
-            getDataFromDB(); //if connection has interrupted - loading from DB
+            if (savedInstance != null) {
+                presenter.attachDB(this, this, this);//if connection has interrupted - loading from DB
+            } else {
+                Toast.makeText(this, this.getString(R.string.error), Toast.LENGTH_SHORT).show();
+                errorHandlerNoConnect = true;
+
+            }
         }
     }
 
@@ -103,9 +98,13 @@ public class MainNewsVActivity extends AppCompatActivity implements MainNewsCont
     private void refreshListener() {
         srlContainer.setOnRefreshListener(() -> {
             if (ConnectivityHelper.isConnectedToNetwork(this)) {
+
                 presenter.attachView(this, getResources().getString(R.string.apiKey), theme);
+
             } else {
-                getDataFromDB();
+                if (!errorHandlerNoConnect) {
+                presenter.attachDB(this, this, this);
+                } else Toast.makeText(getApplicationContext(), this.getString(R.string.error), Toast.LENGTH_SHORT).show();
             }
             new Handler().postDelayed(() -> {
                 if (srlContainer != null) {
@@ -117,7 +116,7 @@ public class MainNewsVActivity extends AppCompatActivity implements MainNewsCont
 
     @Override
     public void setNews(NewsWrapper news) {
-
+        errorHandlerNoConnect = false;
         noteViewModel = ViewModelProviders.of(this).get(NoteViewModel.class);
         newsList.addAll(news.getArticles());
         setRecyclerAdapter(newsList);
@@ -126,6 +125,11 @@ public class MainNewsVActivity extends AppCompatActivity implements MainNewsCont
             articleEntity = new ArticleEntity(news.getArticles().get(i).getTitle(), news.getArticles().get(i).getDescription());
             noteViewModel.insert(articleEntity);
         }
+    }
+
+    @Override
+    public void setNewsFromDB(List <Article> list) {
+        setRecyclerAdapter(list);
     }
 
     private void setRecyclerAdapter(List <Article> list) {
