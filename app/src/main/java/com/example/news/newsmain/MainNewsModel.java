@@ -57,7 +57,7 @@ public class MainNewsModel implements MainNewsContract.Model {
     public Observable <NewsWrapper> getNews(String apiKey, String theme) {
         NewsWrapper emptyWrapper = new NewsWrapper();
         List <Article> emptyList = new ArrayList <>();
-        Article article = new Article("No ", "data");
+        Article article = new Article("_No_", "data");
         emptyList.add(article);
         emptyWrapper.setArticles(emptyList);
         return api.getNews(apiKey, theme)

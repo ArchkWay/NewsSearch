@@ -22,14 +22,14 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainNewsAdapter extends ListAdapter<Article, MainNewsAdapter.NewsHolder>{
+public class MainNewsAdapter extends ListAdapter <Article, MainNewsAdapter.NewsHolder> {
 
     public MainNewsAdapter() {
 
         super(DIFF_CALLBACK);
     }
 
-    private static DiffUtil.ItemCallback<Article> DIFF_CALLBACK = new DiffUtil.ItemCallback <Article>() {
+    private static DiffUtil.ItemCallback <Article> DIFF_CALLBACK = new DiffUtil.ItemCallback <Article>() {
         @Override
         public boolean areItemsTheSame(@NonNull Article oldItem, @NonNull Article newItem) {
             return oldItem.getTitle().equals(newItem.getTitle());
@@ -51,12 +51,12 @@ public class MainNewsAdapter extends ListAdapter<Article, MainNewsAdapter.NewsHo
 
     @Override
     public void onBindViewHolder(@NonNull MainNewsAdapter.NewsHolder viewHolder, int position) {
-        viewHolder.tvDescription.setText(getItem(getItemCount()-1 -position).getDescription());
-        viewHolder.tvTitle.setText(getItem(getItemCount()-1 - position).getTitle());
+        viewHolder.tvDescription.setText(getItem(getItemCount() - 1 - position).getDescription());
+        viewHolder.tvTitle.setText(getItem(getItemCount() - 1 - position).getTitle());
         try {
-        Picasso.get().load(Uri.parse(getItem(getItemCount()-1 -position).getUrlToImage())).placeholder(R.drawable.ic_launcher_background).into(viewHolder.ivPhoto);
+            Picasso.get().load(Uri.parse(getItem(getItemCount() - 1 - position).getUrlToImage())).placeholder(R.drawable.ic_launcher_background).into(viewHolder.ivPhoto);
+        } catch (Exception noImg) {
         }
-        catch (Exception noImg){}
     }
 
     @Override

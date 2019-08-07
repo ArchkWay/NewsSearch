@@ -2,9 +2,8 @@ package com.example.news.newsmain;
 
 import android.os.Handler;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.widget.EditText;
+
+import androidx.appcompat.widget.SearchView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,6 +20,7 @@ import com.example.news.db.ArticleEntity;
 import com.example.news.utils.ConnectivityHelper;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -28,8 +28,9 @@ import javax.inject.Inject;
 
 public class MainNewsVActivity extends AppCompatActivity implements MainNewsContract.View {
     List <Article> newsList = new ArrayList <>();
+    String theme = "russia";//default theme
     RecyclerView rvNews;
-    EditText etTheme;
+    SearchView svTheme;
     MainNewsAdapter adapter = new MainNewsAdapter();
     SwipeRefreshLayout srlContainer;
     ArticleEntity articleEntity;
@@ -37,7 +38,6 @@ public class MainNewsVActivity extends AppCompatActivity implements MainNewsCont
     boolean errorHandlerNoConnect;
     @Inject
     MainNewsContract.Presenter presenter;
-    String theme = "russia";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,32 +45,37 @@ public class MainNewsVActivity extends AppCompatActivity implements MainNewsCont
         setContentView(R.layout.activity_main);
         BaseApp.get(this).getInjector().inject(this);
         setViews();
+        setRecyclerView();
         loadNews(savedInstanceState);
         refreshListener();
-        editThemeListener(savedInstanceState);
+        editSearchThemeListener(savedInstanceState);
+
+    }
+    private void setRecyclerView(){
+        rvNews.setLayoutManager(new LinearLayoutManager(MainNewsVActivity.this));
+        rvNews.setAdapter(adapter);
     }
 
-
-
-    private void editThemeListener(Bundle savedInstance) {
-        etTheme.addTextChangedListener(new TextWatcher() {
+    private void editSearchThemeListener(Bundle savedInstance) {
+        svTheme.setQueryHint(getString(R.string.enter_theme));
+        final Handler handler = new Handler();
+        svTheme.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            public boolean onQueryTextSubmit(String query) {
+                theme = query;
+                loadNews(savedInstance);
+                return false;
             }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                Handler handler = new Handler();
+            public boolean onQueryTextChange(String newText) {
+                theme = newText;
                 handler.postDelayed(() -> {
-                    theme = s.toString();
-                    if (!theme.equals("")) {
+                if (!newText.equals("")) {
                         loadNews(savedInstance);//loading news after two seconds after input theme
-                    }
-                }, 2000);
+                }
+                }, 1500);
+                return false;
             }
         });
     }
@@ -84,13 +89,12 @@ public class MainNewsVActivity extends AppCompatActivity implements MainNewsCont
             } else {
                 Toast.makeText(this, this.getString(R.string.error), Toast.LENGTH_SHORT).show();
                 errorHandlerNoConnect = true;
-
             }
         }
     }
 
     private void setViews() {
-        etTheme = findViewById(R.id.etTheme);
+        svTheme = findViewById(R.id.svTheme);
         srlContainer = findViewById(R.id.srlContainer);
         rvNews = findViewById(R.id.rvNews);
     }
@@ -98,9 +102,7 @@ public class MainNewsVActivity extends AppCompatActivity implements MainNewsCont
     private void refreshListener() {
         srlContainer.setOnRefreshListener(() -> {
             if (ConnectivityHelper.isConnectedToNetwork(this)) {
-
                 presenter.attachView(this, getResources().getString(R.string.apiKey), theme);
-
             } else {
                 if (!errorHandlerNoConnect) {
                 presenter.attachDB(this, this, this);
@@ -116,11 +118,11 @@ public class MainNewsVActivity extends AppCompatActivity implements MainNewsCont
 
     @Override
     public void setNews(NewsWrapper news) {
+        newsList = listWithoutEmpties(news.getArticles());
         errorHandlerNoConnect = false;
         noteViewModel = ViewModelProviders.of(this).get(NoteViewModel.class);
-        newsList.addAll(news.getArticles());
-        setRecyclerAdapter(newsList);
-        noteViewModel.delleteAll();
+        setItemsToAdapter(newsList);
+        noteViewModel.deleteAll();
         for (int i = 0; i < news.getArticles().size(); i++) {
             articleEntity = new ArticleEntity(news.getArticles().get(i).getTitle(), news.getArticles().get(i).getDescription());
             noteViewModel.insert(articleEntity);
@@ -129,13 +131,22 @@ public class MainNewsVActivity extends AppCompatActivity implements MainNewsCont
 
     @Override
     public void setNewsFromDB(List <Article> list) {
-        setRecyclerAdapter(list);
+        setItemsToAdapter(list);
     }
 
-    private void setRecyclerAdapter(List <Article> list) {
+    private void setItemsToAdapter(List <Article> list) {
         rvNews.setLayoutManager(new LinearLayoutManager(MainNewsVActivity.this));
         rvNews.setAdapter(adapter);
         adapter.submitList(list);
+    }
+    private List <Article> listWithoutEmpties(List<Article> list){
+        for(Article article: list) {
+            if (article.getTitle().equals("_No_")){
+                list.remove(article);
+            }
+        }
+        return list;
+
     }
 
     @Override
