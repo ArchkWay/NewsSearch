@@ -4,11 +4,14 @@ package com.example.news.newsmain;
 import android.annotation.SuppressLint;
 import android.content.Context;
 
-import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.example.news.BaseApp;
+import com.example.news.apiservice.pojos.Article;
+import com.example.news.db.ArticleEntity;
+
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -26,19 +29,24 @@ public class MainNewsPresenter implements MainNewsContract.Presenter {
     @Override
     public void attachView(MainNewsContract.View view, String keyApi, String theme) {
         this.view = view;
-        model.getNews(keyApi, theme).subscribe(view::setNews);
-    }
-
-
-    @Override
-    public void attachDB(MainNewsContract.View mvpView, FragmentActivity fragmentActivity, @NonNull LifecycleOwner owner) {
-        this.view = mvpView;
-        view.setNewsFromDB(model.getDataFromDB2(fragmentActivity, owner));
+        model.getNewsFromNet(keyApi, theme).subscribe(view::setNews);
     }
 
     @Override
-    public void detachView() {
-        this.view = null;
+    public void attachDbItems(MainNewsContract.View mvpView,FragmentActivity fragmentActivity, LifecycleOwner owner) {
+        view = mvpView;
+        List <Article> list = model.getDataFromDB(fragmentActivity, owner);
+        view.setNewsFromDB(list);
+    }
+
+    @Override
+    public void deleteAll(FragmentActivity fragmentActivity) {
+        model.deleteAll(fragmentActivity);
+    }
+
+    @Override
+    public void addNewArcticle(ArticleEntity articleEntity) {
+        model.addNewArcticle(articleEntity);
     }
 
 }

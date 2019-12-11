@@ -16,6 +16,4 @@ public interface AppComponent {
     void inject(MainNewsModel model);
     void inject(MainNewsPresenter presenter);
     void inject(MainNewsVActivity view);
-
-
 }

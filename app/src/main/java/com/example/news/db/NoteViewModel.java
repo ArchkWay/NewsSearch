@@ -1,4 +1,4 @@
-package com.example.news.newsmain;
+package com.example.news.db;
 
 import android.app.Application;
 
@@ -15,7 +15,6 @@ public class NoteViewModel extends AndroidViewModel {
 
     private ArticleRepository repository;
     private LiveData <List <ArticleEntity>> allArticles;
-
     public NoteViewModel(@NonNull Application application) {
         super(application);
         repository = new ArticleRepository(application);

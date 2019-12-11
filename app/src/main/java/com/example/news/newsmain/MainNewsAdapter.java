@@ -25,7 +25,6 @@ import java.util.List;
 public class MainNewsAdapter extends ListAdapter <Article, MainNewsAdapter.NewsHolder> {
 
     public MainNewsAdapter() {
-
         super(DIFF_CALLBACK);
     }
 

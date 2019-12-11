@@ -1,5 +1,6 @@
 package com.example.news.di.modules;
 
+import android.app.Application;
 import android.content.Context;
 
 
@@ -44,5 +45,4 @@ public class MvpModule {
     MainNewsContract.Model provideMainNewsContractModel(Context context){
         return new MainNewsModel(context);
     }
-
 }
